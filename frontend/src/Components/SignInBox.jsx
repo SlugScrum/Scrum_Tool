@@ -28,13 +28,12 @@ function SignInBox({ onLogin }) {
         flexDirection: 'column',
         justifyContent: 'flex-start', // Box content aligned to the top, below the navbar
         alignItems: 'center',
-        height: 'calc(100vh - 60px)', // Adjust the 60px to match your navbar's height
+        height: 'calc(100vh - 60px)', // Adjust for navbar's height
         width: '100%',
         paddingTop: '20px',
         '@media (max-width: 600px)': {
           paddingTop: '10px', // Smaller padding for smaller screens
         },
-        // Add other responsive adjustments as necessary
       }}
     >
       <Box
@@ -43,7 +42,7 @@ function SignInBox({ onLogin }) {
           maxWidth: '800px',
           bgcolor: 'rgb(34, 19, 170)',
           color: 'white',
-          marginTop: '20px', // Adjusted margin to prevent overlap
+          marginTop: '50px', // Adjusted margin to prevent overlap with NavBar
           p: 3,
           borderRadius: '10px',
           boxShadow: '10px 10px 10px rgba(0, 0, 0, 0.7)',
@@ -52,7 +51,7 @@ function SignInBox({ onLogin }) {
           alignItems: 'center',
           gap: 2,
           '& .MuiTextField-root': {
-            width: '100%',
+            width: '90%',
             '& label': { color: 'white' },
             '& .MuiInput-underline:before': { borderBottomColor: 'white' },
             '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottomColor: 'white' },
@@ -119,11 +118,18 @@ function SignInBox({ onLogin }) {
           value={password}
           onChange={handlePasswordChange}
         />
+        <Link
+          href="#" // Replace with password reset page link
+          onClick={() => window.open('/forgot-password', '_blank')}
+          sx={{ color: 'white', textDecoration: 'none', marginRight: '74.5%', marginTop: '-10px' }}
+          >
+          Forgot Password?
+        </Link>
         <Button
           variant="contained"
           onClick={handleEnterClick}
           sx={{
-            mt: 2,
+            mt: -3,
             bgcolor: 'white',
             color: 'rgb(34, 19, 170)',
             '&:hover': {
@@ -134,21 +140,13 @@ function SignInBox({ onLogin }) {
         >
           Enter
         </Button>
-        <Typography sx={{ color: 'white', textAlign: 'center', mt: 2 }}>
+        <Typography sx={{ color: 'white', textAlign: 'center', mt: 0 }}>
           <Link
             href="#" // Replace with registration page link
             onClick={() => window.open('/register', '_blank')}
             sx={{ color: 'white', textDecoration: 'none' }}
           >
             Create a new account
-          </Link>
-          {' | '}
-          <Link
-            href="#" // Replace with password reset page link
-            onClick={() => window.open('/forgot-password', '_blank')}
-            sx={{ color: 'white', textDecoration: 'none' }}
-          >
-            Forgot Password
           </Link>
         </Typography>
       </Box>
