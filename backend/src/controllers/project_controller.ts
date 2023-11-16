@@ -25,7 +25,7 @@ export const getAllProjects = async (req: express.Request, res: express.Response
 
 export const newProject = async (req: express.Request, res: express.Response) => {
   try {
-    const values = req.params;
+    const values = req.body;
     const newProject = await createProject(values);
     return res.json(newProject);
   } catch (error) {
