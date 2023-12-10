@@ -86,12 +86,18 @@ const CreateReleasePlan = ({ projectId }) => {
   
     // Filter out empty strings from highLevelGoals and userStories
     const filteredHighLevelGoals = highLevelGoals.filter(goal => goal.trim() !== '');
-    const filteredUserStories = userStories.filter(story => story.description.trim() !== '');
-    const descriptions = filteredUserStories.map(story => story.description.trim());
+    // const filteredUserStories = userStories.filter(story => story.description.trim() !== '');
+    // const descriptions = filteredUserStories.map(story => story.description.trim());
+
+    const filteredUserStories = userStories.filter(story => 
+      story.description.trim() !== '' || 
+      story.notes.trim() !== '' || 
+      story.storyPoints.trim() !== ''
+    );
   
     const releasePlanData = {
       high_level_goals: filteredHighLevelGoals,
-      user_stories: descriptions,
+      user_stories: filteredUserStories,
       status: "incomplete",
       dateFinalized: formattedToday
     };
