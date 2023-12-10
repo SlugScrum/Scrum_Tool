@@ -86,11 +86,12 @@ const CreateReleasePlan = ({ projectId }) => {
   
     // Filter out empty strings from highLevelGoals and userStories
     const filteredHighLevelGoals = highLevelGoals.filter(goal => goal.trim() !== '');
-    const filteredUserStories = userStories.filter(story => story.trim() !== '').map(story => story.description.trim());
+    const filteredUserStories = userStories.filter(story => story.description.trim() !== '');
+    const descriptions = filteredUserStories.map(story => story.description.trim());
   
     const releasePlanData = {
       high_level_goals: filteredHighLevelGoals,
-      user_stories: filteredUserStories,
+      user_stories: descriptions,
       status: "incomplete",
       dateFinalized: formattedToday
     };
