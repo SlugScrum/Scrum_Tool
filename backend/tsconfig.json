@@ -1,12 +1,14 @@
 {
     "compilerOptions": {
         "module":"NodeNext",
-        "moduleResolution": "node",
+        "moduleResolution": "NodeNext",
         "target":"ES2020",
         "baseUrl": "src",
         "sourceMap": true,
         "outDir":"dist",
         "noImplicitAny": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
     },
-    "include": ["src/**/*"]
+    "include": ["src/**/*", "tests"]
 }

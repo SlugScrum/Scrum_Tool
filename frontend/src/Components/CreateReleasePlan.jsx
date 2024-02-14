@@ -3,19 +3,19 @@ import { Box, Button, TextareaAutosize, Typography, TextField, Paper} from '@mui
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import Slider from '@mui/material/Slider';
 import dayjs from 'dayjs'; 
 
 
-const CreateReleasePlan = ({ projectId,onFormSubmit }) => {
-  const [nameText, setDocumentText] = useState('');
+const CreateReleasePlan = ({ projectId,onFormSubmit, releasePlanDetails}) => {
+  console.log(releasePlanDetails);
+  const [nameText, setDocumentText] = useState(releasePlanDetails.name);
   const [releaseDateText, setReleaseDateText] = useState(dayjs()); // Initialize with a Day.js object
   const [userStoriesText, setUserStoriesText] = useState('');
   const [highLevelGoalsText, sethighLevelGoalsText] = useState('');
   const [finalizedDateText, setFinalizedDateText] = useState('');
-  const [highLevelGoals, setHighLevelGoals] = useState(['']); // Array of goals
-  const [userStories, setUserStories] = useState([{ description: '', notes: '', points: 20}]); //Array of user stories
+  const [highLevelGoals, setHighLevelGoals] = useState(releasePlanDetails.high_level_goals); // Array of goals
+  const [userStories, setUserStories] = useState(releasePlanDetails.stories); //Array of user stories
 
 
   //Code for the sliders
@@ -206,9 +206,7 @@ const CreateReleasePlan = ({ projectId,onFormSubmit }) => {
         Proposed Release Date
       </Typography>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <DemoContainer components={['DatePicker']}>
-          <DatePicker value={releaseDateText} onChange={handleReleaseDateChange} />
-        </DemoContainer>
+	  	<DatePicker />
       </LocalizationProvider>
       
       <Typography variant="h6" sx={{ marginTop: 2, marginBottom: 2 }}>
@@ -263,7 +261,7 @@ const CreateReleasePlan = ({ projectId,onFormSubmit }) => {
           Story Points
           <Slider
             aria-label="Always visible"
-            defaultValue={20}
+            defaultValue={story.points}
             getAriaValueText={valuetext}
             step={1}
             marks={marks}
