@@ -1,207 +1,422 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, Component } from 'react';
 import { useLocation } from "react-router-dom"
 import { AppBar, Typography, Button, Box, Paper } from '@mui/material';
 import { List, ListItem, ListItemText } from '@mui/material';
 import CreateReleasePlan from '../Components/CreateReleasePlan'; // Adjust the import path as necessary
+import { Grid } from '@mui/material';
+import Sidebar from '../Components/Sidebar';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Divider from '@mui/material/Divider';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+
+
+/*
+This code allows the user to drag and drop the different stories in the release plan. 
+*/
+
+// fake data generator
+const getItems = (count, offset = 0) =>
+  Array.from({ length: count }, (v, k) => k).map(k => ({
+    id: `item-${k + offset}-${new Date().getTime()}`,
+    content: `item ${k + offset}`
+  }));
+
+const reorder = (list, startIndex, endIndex) => {
+  const result = Array.from(list);
+  const [removed] = result.splice(startIndex, 1);
+  result.splice(endIndex, 0, removed);
+
+  return result;
+};
+
+
+/**
+ * Moves an item from one list to another list.
+ */
+const move = (source, destination, droppableSource, droppableDestination) => {
+  const sourceClone = Array.from(source);
+  const destClone = Array.from(destination);
+  const [removed] = sourceClone.splice(droppableSource.index, 1);
+
+  destClone.splice(droppableDestination.index, 0, removed);
+
+  const result = {};
+  result[droppableSource.droppableId] = sourceClone;
+  result[droppableDestination.droppableId] = destClone;
+
+  return result;
+};
+
+const grid = 8;
+
+const getItemStyle = (isDragging, draggableStyle) => ({
+  // some basic styles to make the items look a bit nicer
+  userSelect: "none",
+  padding: grid * 2,
+  margin: `0 0 ${grid}px 0`,
+
+  // change background colour if dragging
+  background: isDragging ? "lightgreen" : "grey",
+
+  // styles we need to apply on draggables
+  ...draggableStyle
+});
+const getListStyle = isDraggingOver => ({
+  background: isDraggingOver ? "lightblue" : "lightgrey",
+  padding: grid,
+  width: 250
+});
 
 
 const ReleasePlan = () => {
-  const [showCreateReleasePlan, setShowCreateReleasePlan] = useState(false);
-  const [showReleasePlan, setShowReleasePlan] = useState(false);
-  const [releasePlanText, setReleasePlanText] = useState([]);
-  const [formSubmitted, setFormSubmitted] = useState(false);
+  
+  //////////////Attributes for DnD/////////////////
 
-  const location = useLocation()
-  const [project,setProject] = useState(location.state.currentProject)
-  console.log(project)
+  const [state, setState] = useState([getItems(10), getItems(5, 10)]);
 
-  // Fetch release plans on page open
-  useEffect(() => {
-    const options = {
-      method: "GET",
-      url: `http://localhost:3001/projects/${project._id}`,
-      credentials: 'include'
-    }
-    fetch(`http://localhost:3001/projects/${project._id}`, options).then((result) => {
-      result.json().then((response) => {
-        console.log(response)
-        setProject(response)
-        setReleasePlanText(response.releases || []);
-      })
-    })
-  }, [project._id]);
-  useEffect(()=>{
-    console.log(project._id)
-    if(formSubmitted){
-      //add fetch here
-      const options = {
-        method:"GET",
-        url:`http://localhost:3001/projects/${project._id}`,
-        credentials:'include'
-      }
-      fetch(`http://localhost:3001/projects/${project._id}`,options).then((result)=>{
-        result.json().then((response)=>{
-          console.log(response)
-          setProject(response)
-        })
-      })
-      console.log("ITS SUBMITTED")
-      setFormSubmitted(false);
-      toggleCreateReleasePlan()
-      toggleViewReleasePlan()
-      setReleasePlanText(savedReleasePlans || 'No release plan found.');
+  
+  {/*const [items, setItems] = useState(getItems(6)); 
+    const onDragEnd = useCallback((result) => {
+    if (!result.destination) {
+      return;
     }
 
-  },[formSubmitted]);
-  function formatStories(stories){
-    
-    // Display stories
-    if (stories.length>0){
-      return(
-        <Paper>
-          <List>
-          {stories.map((story,index)=>(
-            <div key = {index}>
-            <ListItem>
-              <Typography sx={{ textAlign: 'center', marginTop: 1, fontSize:16 }}>
-                User Story {index+1}
-              </Typography>
-            </ListItem>
-            <ListItem>
+  }, [state]);
 
-              <Typography sx={{ textAlign: 'left', fontSize:12 }}>
-                Description: {story.description}                
-              </Typography>
-            </ListItem>
-            <ListItem>
-              <Typography sx={{ textAlign: 'left', fontSize:12 }}>
-                  Notes: {story.notes}                
-              </Typography>
-            </ListItem>
-            <ListItem>
-              <Typography sx={{ textAlign: 'left', fontSize:12 }}>
-                Points: {story.points}
-              </Typography>
-            </ListItem>
 
-            </div> 
-          ))}
-        </List>
-      </Paper>
-      )
-    }else{
-      return(
-        <Typography>
-          No Stories Added Yet
-        </Typography>
-      )
+  */}
+
+  const onDragEnd = useCallback((result) => {
+    const {source, destination} = result;
+
+    if(!destination){
+      return;
     }
+    const sInd = +source.droppableId;
+    const dInd = +destination.droppableId;
 
-  }
-  const savedReleasePlans = project.releases
+    if (sInd === dInd) {
+      const items = reorder(state[sInd], source.index, destination.index);
+      const newState = [...state];
+      newState[sInd] = items;
+      setState(newState);
+    } else {
+      const result = move(state[sInd], state[dInd], source, destination);
+      const newState = [...state];
+      newState[sInd] = result[sInd];
+      newState[dInd] = result[dInd];
 
-  // Show create release plan form
-  const toggleCreateReleasePlan = () => {
-    setShowCreateReleasePlan(!showCreateReleasePlan);
-  };
-
-  // Show release plan
-  const toggleViewReleasePlan = () => {
-    if (!showReleasePlan) {
-      console.log(savedReleasePlans);
-      setReleasePlanText(savedReleasePlans || 'No release plan found.');
+      setState(newState.filter(group => group.length));
     }
-    setShowReleasePlan(!showReleasePlan);
+  });
+
+  
+  ////////////////////////////////////////////////
+  const [open, setOpen] = useState(true);
+
+  const toggleDrawer = () => {
+    setOpen(!open);
   };
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Box display="flex" justifyContent="center" p={7}>
-        <Paper elevation={3} sx={{ width: '80%', padding: 2 }}>
-          <Typography variant="h4" sx={{ textAlign: 'center', marginBottom: 2 }}>
-            Release Plans
-          </Typography>
-          <Box display="flex" justifyContent="space-between" marginBottom={2}>
-            <Button variant="contained" color="primary" onClick={toggleCreateReleasePlan}>
-              {showCreateReleasePlan ? 'Hide Create Form' : 'Create Release Plan'}
-            </Button>
-          </Box>
+    <Grid
+      container
+      spacing={2}
+    >
+      <Grid 
+        item
+        xs={open ? 2 : 'auto'}
+      >
+        <Sidebar open={open} toggleDrawer={toggleDrawer} />
+      </Grid>
 
-          {/* Conditionally render the CreateReleasePlan component */}
-          {showCreateReleasePlan && <CreateReleasePlan projectId={project._id} onFormSubmit = {()=>setFormSubmitted(true)}/>}
-
-          {/* Display Release Plans */}
-          <Paper elevation={2} sx={{ backgroundColor: '#e0e0e0', padding: 2, marginTop: 2 }}>
-            {releasePlanText.length > 0 ? (
-              // If there are release plans, map and display them
-              releasePlanText.map((line, index) => (
-                <Paper key={index}>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      whiteSpace: 'pre-wrap',
-                      textAlign: 'center',
-                      marginTop: 2,
-                      marginBottom: 2
-                    }}
-                  >
-                    {line.name}
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      whiteSpace: 'pre-wrap',
-                      textAlign: 'center'
-                    }}
-                  >
-                    High Level Goals:
-                  </Typography>
-                  <List>
-                    {line.high_level_goals.map((goal, goalIndex) => (
-                      <ListItem key={goalIndex}>
-                        <ListItemText primary={goal} />
-                      </ListItem>
-                    ))}
-                  </List>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      whiteSpace: 'pre-wrap',
-                      textAlign: 'center'
-                    }}
-                  >
-                    Stories
-                  </Typography>
-                  {formatStories(line.stories)}
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      whiteSpace: 'pre-wrap',
-                      textAlign: 'center'
-                    }}
-                  >
-                    Status: {line.status}
-                  </Typography>
-                </Paper>
-              ))
-            ) : (
-              // If there are no release plans, display a message
+      <Grid item xs>
+        {/* TODO: update Sprint Number */}
+        <Typography
+          variant="h6"
+          marginTop={8}
+          marginBottom={2}
+          marginLeft={1}
+          textAlign={'left'}
+          sx={{
+            fontWeight: 'bold',
+            fontSize: 32,
+          }}
+        >
+          Sprint 3:
+        </Typography>
+        <Box
+          display="flex"
+          justifyContent={'flex-start'}
+        >
+          <ButtonGroup 
+            fullWidth
+            variant="contained" 
+            sx={{
+              margin: '5px 10px',
+              height: '60px',
+            }}
+          >
+            {/* TODO: Handle button clicks */}
+            <Button
+              onClick={() => console.log('Clicked Sprint Plan')}
+            >
               <Typography
-                variant="body1"
-                sx={{
-                  whiteSpace: 'pre-wrap',
-                  textAlign: 'center',
-                  marginTop: 2,
-                  marginBottom: 2
-                }}
+                fontWeight="bold"
               >
-                No Release Plans to display
+                Sprint Plan
               </Typography>
-            )}
-          </Paper>
-        </Paper>
-      </Box>
-    </Box>
+              
+            </Button>
+
+            <Button
+              onClick={() => console.log('Clicked Scrum Board')}
+            >
+              <Typography
+                fontWeight="bold"
+              >
+                Scrum Board
+              </Typography>
+            </Button>
+
+            <Button
+              onClick={() => console.log('Clicked Burnup Chart')}
+            >
+              <Typography
+                fontWeight="bold"
+              >
+                Burnup Chart
+              </Typography>
+            </Button>
+
+            <Button
+              onClick={() => console.log('Clicked All Sprints')}
+            >
+              <Typography
+                fontWeight="bold"
+              >
+                All Sprints
+              </Typography>
+            </Button>
+          </ButtonGroup>
+        </Box>
+        
+        <Divider 
+          sx={{
+            margin: '20px 0px', 
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            height: '1.5px'
+          }}
+        />
+
+        <Typography
+          variant="h6"
+          marginBottom={2}
+          marginLeft={1}
+          textAlign={'left'}
+          fontWeight="bold"
+          fontSize={32}
+        >
+          Release Plan:
+        </Typography>
+
+        {/* TODO: Change version number */}
+        <Typography
+          textAlign="left"
+          marginLeft={2}
+          marginBottom={2}
+        >
+          v1.0.0
+        </Typography>
+        
+
+        {/* Problem Statement */}
+        <Typography
+          variant="h6"
+          marginBottom={2}
+          marginLeft={2}
+          textAlign={'left'}
+          fontWeight="bold"
+          fontSize={18}
+          
+        >
+          Problem Statement
+        </Typography>
+
+        <Card
+          sx={{
+            minHeight: 100,
+            maxWidth: '95%',
+            marginLeft: 2,
+            marginBottom: 2,
+            backgroundColor: 'lightgray',
+            borderRadius: 5,
+          }}
+        >
+          <CardContent>
+            <Typography textAlign='left'>
+              {/* TODO: Add problem statement */}
+              We noticed that there are currently no good websites for Professor Jullig to run CSE 115 on. 
+              All the existing ones are lacking in functionality or have high cost.
+            </Typography>
+          </CardContent>
+        </Card>
+
+        {/* High Level Goals */}
+        <Typography
+          variant="h6"
+          marginBottom={2}
+          marginLeft={2}
+          textAlign={'left'}
+          fontWeight="bold"
+          fontSize={18}
+        >
+          High Level Goals
+        </Typography>
+
+        <Card
+          sx={{
+            minHeight: 100,
+            maxWidth: '95%',
+            marginLeft: 2,
+            marginBottom: 2,
+            backgroundColor: 'lightgray',
+            borderRadius: 5,
+          }}
+        >
+          <CardContent>
+            <Typography textAlign='left'>
+              {/* TODO: Add high level goals */}
+              In this release, we will implement the ability for students to join their class, join or create projects, create accounts, 
+              and be able to reset their password. There will be users of different types and they will be able to interact with one 
+              another in real time.
+            </Typography>
+          </CardContent>
+        </Card>
+
+        <Grid container spacing={2}>
+          <Grid item xs={2.5}>
+            <Typography
+              variant="h6"
+              marginLeft={2}
+              textAlign={'left'}
+              fontWeight="bold"
+              fontSize={24}
+              
+            >
+              Backlog
+            </Typography>
+
+            <Paper
+              sx={{
+                marginLeft: 2,
+                backgroundColor: 'lightgray',
+                borderRadius: 6,
+              }}
+            >
+              {/* TODO: add Backlog items */}
+              <List>
+                <ListItem>
+                  <Card
+                    sx={{
+                      marginBottom: 1,
+                      borderRadius: 6,
+                    }}
+                  >
+                    <CardContent>
+                      <Typography
+                        variant="h6"
+                        textAlign={'left'}
+                        fontSize={16}
+                      >
+                        As a student I want to be able to reset my password in case I forget so that 
+                        I do not lost access to all my account and data.
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </ListItem>
+                <ListItem>
+                  <Card
+                    sx={{
+                      marginBottom: 1,
+                      borderRadius: 6,
+                    }}
+                  >
+                    <CardContent>
+                      <Typography
+                        variant="h6"
+                        textAlign={'left'}
+                        fontSize={16}
+                      >
+                        As a student I want to be able to reset my password in case I forget so that 
+                        I do not lost access to all my account and data.
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </ListItem>
+              </List>
+            </Paper>
+          </Grid>
+
+          <Grid item xs>
+            <Typography
+              variant="h6"
+              marginLeft={2}
+              textAlign={'left'}
+              fontWeight="bold"
+              fontSize={24}
+              
+            >
+              Sprints
+            </Typography>
+
+            <Paper
+              sx={{
+                maxWidth: '95%',
+                marginLeft: 2,
+                backgroundColor: 'lightgray',
+                borderRadius: 6,
+              }}
+            >
+              {/* TODO: add Sprints */}
+              <List>
+                <ListItem>
+                  <Card
+                    sx={{
+                      maxWidth: '25%',
+                      marginBottom: 1,
+                      borderRadius: 6,
+                    }}
+                  >
+                    <CardContent>
+                      <Typography
+                        variant="h6"
+                        textAlign={'left'}
+                        fontSize={16}
+                      >
+                        As a student I want to be able to reset my password in case I forget so that 
+                        I do not lost access to all my account and data.
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </ListItem>
+                {/*Test the drag/drop feature here*/}                    
+              </List>
+            </Paper>
+          </Grid>
+
+        </Grid>
+
+      </Grid>
+    </Grid>
+
+    
+
+
+    
   );
 };
 
