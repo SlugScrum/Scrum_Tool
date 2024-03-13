@@ -1,11 +1,9 @@
-// App.jsx
 import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import SignInBox from './Components/SignInBox';
+import SignInBox from './Components/SignIn/SignInBox';
 import Dashboard from './Pages/Dashboard';
 import ReleasePlan from './Pages/ReleasePlan';
-import SprintPlan from './Pages/SprintPage';
-import Navbar from './Components/Navbar'; // Make sure the path is correct
+import Navbar from './Components/common/Navbar';
 import Register from './Pages/Register';
 
 function App() {
@@ -13,7 +11,7 @@ function App() {
   const handleSignIn = (email, password) => {
     try{ 
       var options = {
-        url:"https://localhost:3001/auth/login/",
+        url:"https://localhost:8080/api/user/login/",
         method:'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -21,9 +19,9 @@ function App() {
         body:JSON.stringify({email,password}),
         credentials:'include'
       }
-      fetch('http://localhost:3001/auth/login/',options).then((result)=>{
+      fetch('http://localhost:8080/api/user/login/',options).then((result)=>{
         console.log(result)
-        if(result.status == 200){
+        if(result.status === 200){
           
         }
         return result.json()
@@ -71,17 +69,12 @@ function App() {
             isLoggedIn ? <ReleasePlan /> : <Navigate replace to="/" />
           }
         />
-        <Route
-          path="/sprints"
-          element={
-            isLoggedIn ? <SprintPlan /> : <Navigate replace to="/" />
-          }
-        />
+        
         <Route path="/register"
         element={
           <Register/>
         } />
-        <Route path="/registrations" element={<Register />} />
+        {/* <Route path="/registrations" element={<Register />} /> */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
